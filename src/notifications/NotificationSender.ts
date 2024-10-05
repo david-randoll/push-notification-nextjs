@@ -13,7 +13,7 @@ export const sendNotification = async (subscription: PushSubscription, title: st
         //image: "/logo.png", if you want to add an image
         icon: "/user.png",
         url: process.env.NOTIFICATION_URL ?? "/",
-        badge: "/logos.png",
+        badge: "/logo.svg",
     };
 
     webpush
