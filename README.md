@@ -74,3 +74,21 @@ With this should be able to send notifications now. For Apple devices, you will 
 
 The [next-pwa](https://www.npmjs.com/package/next-pwa) package will generate a `sw-pwa.js` and a `workbox-*.js` file in
 the public folder.
+
+I am going to use [pwabuilder](https://www.pwabuilder.com/imageGenerator) to generate the icons for the app. This will generate the different sizes of the icon that are needed for different devices. After going to the site, download the zip file and place the contents into the public folder. You should get 3 folders: android, ios, and windows. Also, an `icons.json` file which we will use for our manifest file.
+
+Move the `icons.json` file to the `public` folder and rename it to `manifest.json`.
+
+```json
+{
+    "name": "Push Notification Sample",
+    "short_name": "Push Notification Sample",
+    "description": "A sample project for push notifications with Next.js",
+    "theme_color": "#FFFFFF",
+    "background_color": "#FFFFFF",
+    "start_url": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "icons": // the icons will be here
+}
+```
