@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     description:
         "A sample project for push notifications with Next.js. The app used web push notifications to send messages to users.",
     icons: {
-        icon: "/logo.jpg",
+        icon: "/logo.svg",
     },
 };
 
