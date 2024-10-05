@@ -92,3 +92,42 @@ Move the `icons.json` file to the `public` folder and rename it to `manifest.jso
     "icons": // the icons will be here
 }
 ```
+
+add the `manifest.json` file to the `layout.tsx` file.
+
+```tsx
+export default function RootLayout({
+    children,
+}: Readonly<{
+    children: React.ReactNode;
+}>) {
+    return (
+        <html lang="en">
+            <head>
+                <link rel="manifest" href="/manifest.json" />
+            </head>
+            <body className={`${inter.variable} ${ibmPlexSerif.variable}`}>
+                <NotificationProvider>{children}</NotificationProvider>
+            </body>
+        </html>
+    );
+}
+```
+
+modify the `next.config.mjs` file to include the `next-pwa` configuration.
+
+```javascript
+/** @type {import('next').NextConfig} */
+
+import withPWA from "next-pwa";
+
+const pwaConfig = withPWA({
+    dest: "public",
+    sw: "sw-pwa.js",
+});
+
+export default {
+    ...pwaConfig,
+    output: "standalone", // remove this if you are not using standalone
+};
+```
