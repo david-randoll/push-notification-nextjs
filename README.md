@@ -114,20 +114,17 @@ export default function RootLayout({
 }
 ```
 
-modify the `next.config.mjs` file to include the `next-pwa` configuration.
+modify the `next.config.js` file to include the `next-pwa` configuration.
 
 ```javascript
 /** @type {import('next').NextConfig} */
 
-import withPWA from "next-pwa";
-
-const pwaConfig = withPWA({
+const withPWA = require("next-pwa")({
     dest: "public",
     sw: "sw-pwa.js",
 });
 
-export default {
-    ...pwaConfig,
-    output: "standalone", // remove this if you are not using standalone
-};
+module.exports = withPWA({
+    output: "standalone",
+});
 ```
