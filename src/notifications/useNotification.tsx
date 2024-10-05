@@ -1,3 +1,4 @@
+"use client";
 import { checkPermissionStateAndAct, notificationUnsupported, registerAndSubscribe } from "./NotificationPush";
 import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect } from "react";
 
