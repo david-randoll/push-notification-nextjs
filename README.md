@@ -22,6 +22,17 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## How it works
 
+The app uses the [web-push](https://www.npmjs.com/package/web-push) package to send push notifications. The app has a service worker that listens for push events and displays the notification.
+
+Using just this package is enough to send push notifications from most devices and browsers.
+
+For notifications to work on Apple devices, there are a few extra steps. You can read more about it here [here](https://developer.apple.com/documentation/usernotifications/sending-web-push-notifications-in-web-apps-and-browsers).
+
+-   The app must be served over HTTPS with a valid SSL certificate.
+-   The app must be a PWA (Progressive Web App).
+
+## Configuration
+
 Install the below packages.
 
 ```bash
@@ -34,4 +45,10 @@ Skip this step if you are using typescript.
 npm install @types/web-push --save-dev
 ```
 
-The [next-pwa](https://www.npmjs.com/package/next-pwa) package I am using will genrate a `sw.js` and a `workbox-*.js` file in the public folder. If you have a file with a different name you can 
+### Setting up the notification
+
+Add the `notification-sw.js` file to the `public` folder. This file will push the notification to the user. And when the user clicks on the notification, it will redirect the user to the app. The URL it goes to come from the `data` object. We will see more about this later.
+
+### Configuring as a PWA
+
+The [next-pwa](https://www.npmjs.com/package/next-pwa) package will generate a `sw-pwa.js` and a `workbox-*.js` file in the public folder.
