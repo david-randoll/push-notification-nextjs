@@ -21,7 +21,7 @@ const Home = () => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+        <div className="flex flex-col items-center justify-center min-h-[calc(100dvh)] bg-gray-100 p-4">
             {/* Notification Subscription Section */}
             <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-md">
                 <h1 className="text-2xl font-bold mb-4 text-center">Push Notification Subscription</h1>
