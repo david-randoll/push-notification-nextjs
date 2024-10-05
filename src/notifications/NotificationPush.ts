@@ -2,7 +2,11 @@ const SERVICE_WORKER_FILE_PATH = "./notification-sw.js";
 
 export function notificationUnsupported(): boolean {
     let unsupported = false;
-    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("showNotification" in ServiceWorkerRegistration.prototype)) {
+    if (
+        !("serviceWorker" in navigator) ||
+        !("PushManager" in window) ||
+        !("showNotification" in ServiceWorkerRegistration.prototype)
+    ) {
         unsupported = true;
     }
     return unsupported;
@@ -34,9 +38,7 @@ export async function registerAndSubscribe(onSubscribe: (subs: PushSubscription 
             })
             .then((subscription: PushSubscription) => {
                 console.info("Created subscription Object: ", subscription.toJSON());
-                submitSubscription(subscription).then((_) => {
-                    onSubscribe(subscription);
-                });
+                onSubscribe(subscription);
             })
             .catch((e) => {
                 console.error("Failed to subscribe cause of: ", e);
@@ -44,16 +46,4 @@ export async function registerAndSubscribe(onSubscribe: (subs: PushSubscription 
     } catch (e) {
         console.error("Failed to register service-worker: ", e);
     }
-}
-
-async function submitSubscription(subscription: PushSubscription): Promise<void> {
-    const res = await fetch("/api/web-push/subscription", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ subscription }),
-    });
-    const result = await res.json();
-    console.log(result);
 }

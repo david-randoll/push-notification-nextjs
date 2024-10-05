@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, IBM_Plex_Serif } from "next/font/google";
 import "./globals.css";
+import { NotificationProvider } from "@/notifications/useNotification";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const ibmPlexSerif = IBM_Plex_Serif({
@@ -11,7 +12,8 @@ const ibmPlexSerif = IBM_Plex_Serif({
 
 export const metadata: Metadata = {
     title: "Push Notification Sample",
-    description: "A sample project for push notifications with Next.js. The app used web push notifications to send messages to users.",
+    description:
+        "A sample project for push notifications with Next.js. The app used web push notifications to send messages to users.",
     icons: {
         icon: "/logo.jpg",
     },
@@ -24,7 +26,9 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body className={`${inter.variable} ${ibmPlexSerif.variable}`}>{children}</body>
+            <body className={`${inter.variable} ${ibmPlexSerif.variable}`}>
+                <NotificationProvider>{children}</NotificationProvider>
+            </body>
         </html>
     );
 }
