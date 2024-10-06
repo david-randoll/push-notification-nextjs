@@ -15,7 +15,7 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [isSupported, setIsSupported] = useState<boolean>(false);
+    const [isSupported, setIsSupported] = useState<boolean>(true);
     const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
     const [subscription, setSubscription] = useState<PushSubscription | null>(null);
 
