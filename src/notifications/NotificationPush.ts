@@ -2,11 +2,7 @@ const SERVICE_WORKER_FILE_PATH = "./notification-sw.js";
 
 export function notificationUnsupported(): boolean {
     let unsupported = false;
-    if (
-        !("serviceWorker" in navigator) ||
-        !("PushManager" in window) ||
-        !("showNotification" in ServiceWorkerRegistration.prototype)
-    ) {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("showNotification" in ServiceWorkerRegistration.prototype)) {
         unsupported = true;
     }
     return unsupported;
@@ -46,4 +42,27 @@ export async function registerAndSubscribe(onSubscribe: (subs: PushSubscription 
     } catch (e) {
         console.error("Failed to register service-worker: ", e);
     }
+}
+
+export async function unsubscribe(onUnsubscribe: () => void): Promise<void> {
+    navigator.serviceWorker.ready
+        .then((reg) => {
+            reg.pushManager.getSubscription().then((subscription) => {
+                if (!subscription) {
+                    console.error("No subscription found");
+                    return;
+                }
+                subscription
+                    .unsubscribe()
+                    .then((successful) => {
+                        onUnsubscribe();
+                    })
+                    .catch((e) => {
+                        console.error("Failed to unsubscribe cause of: ", e);
+                    });
+            });
+        })
+        .catch((e) => {
+            console.error("Failed to get service-worker registration: ", e);
+        });
 }

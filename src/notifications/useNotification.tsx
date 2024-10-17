@@ -1,5 +1,5 @@
 "use client";
-import { checkPermissionStateAndAct, notificationUnsupported, registerAndSubscribe } from "./NotificationPush";
+import { checkPermissionStateAndAct, notificationUnsupported, registerAndSubscribe, unsubscribe } from "./NotificationPush";
 import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect } from "react";
 
 interface NotificationContextType {
@@ -10,6 +10,7 @@ interface NotificationContextType {
     subscription: PushSubscription | null;
     setSubscription: React.Dispatch<React.SetStateAction<PushSubscription | null>>;
     handleSubscribe: () => void;
+    handleUnsubscribe: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -42,6 +43,16 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         });
     };
 
+    const handleUnsubscribe = () => {
+        unsubscribe(() => {
+            // for a production app, you would probably have a user account and delete the subscription from the user
+            // make http request to delete the subscription
+            setIsSubscribed(false);
+            setSubscription(null);
+            console.log("Unsubscribed from push notifications");
+        });
+    };
+
     const contextValue = useMemo(
         () => ({
             isSupported,
@@ -51,8 +62,9 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
             subscription,
             setSubscription,
             handleSubscribe,
+            handleUnsubscribe,
         }),
-        [isSupported, setIsSupported, isSubscribed, setIsSubscribed, subscription, setSubscription, handleSubscribe]
+        [isSupported, setIsSupported, isSubscribed, setIsSubscribed, subscription, setSubscription, handleSubscribe, handleUnsubscribe]
     );
 
     return <NotificationContext.Provider value={contextValue}>{children}</NotificationContext.Provider>;

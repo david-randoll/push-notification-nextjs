@@ -4,7 +4,7 @@ import Image from "next/image";
 import React, { useState } from "react";
 
 const Home = () => {
-    const { isSupported, isSubscribed, handleSubscribe, subscription } = useNotification();
+    const { isSupported, isSubscribed, handleSubscribe, handleUnsubscribe, subscription } = useNotification();
 
     const [message, setMessage] = useState("");
     const [title, setTitle] = useState("");
@@ -43,6 +43,9 @@ const Home = () => {
                         ) : (
                             <div className="text-center">
                                 <p className="text-green-600 font-semibold">You are subscribed!</p>
+                                <button onClick={handleUnsubscribe} className="w-auto mt-4 bg-red-300 text-black py-2 px-4 rounded-lg hover:bg-red-400 transition">
+                                    Unsubscribe from Push Notifications
+                                </button>
                             </div>
                         )}
                     </div>
