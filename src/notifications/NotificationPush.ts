@@ -10,14 +10,8 @@ export function notificationUnsupported(): boolean {
 
 export function checkPermissionStateAndAct(onSubscribe: (subs: PushSubscription | null) => void): void {
     const state: NotificationPermission = Notification.permission;
-    switch (state) {
-        case "denied":
-            break;
-        case "granted":
-            registerAndSubscribe(onSubscribe);
-            break;
-        case "default":
-            break;
+    if (state === "granted") {
+        registerAndSubscribe(onSubscribe);
     }
 }
 
@@ -45,24 +39,27 @@ export async function registerAndSubscribe(onSubscribe: (subs: PushSubscription 
 }
 
 export async function unsubscribe(onUnsubscribe: () => void): Promise<void> {
-    navigator.serviceWorker.ready
-        .then((reg) => {
-            reg.pushManager.getSubscription().then((subscription) => {
-                if (!subscription) {
-                    console.error("No subscription found");
-                    return;
-                }
-                subscription
-                    .unsubscribe()
-                    .then((successful) => {
-                        onUnsubscribe();
-                    })
-                    .catch((e) => {
-                        console.error("Failed to unsubscribe cause of: ", e);
-                    });
-            });
-        })
-        .catch((e) => {
-            console.error("Failed to get service-worker registration: ", e);
-        });
+    try {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+            await subscription.unsubscribe();
+            console.info("Unsubscribed successfully");
+            onUnsubscribe();
+        }
+    } catch (e) {
+        console.error("Failed to unsubscribe cause of: ", e);
+    }
+}
+
+export async function unregisterServiceWorker(): Promise<void> {
+    try {
+        const registration = await navigator.serviceWorker.getRegistration(SERVICE_WORKER_FILE_PATH);
+        if (registration) {
+            await registration.unregister();
+            console.info("Service Worker unregistered successfully");
+        }
+    } catch (e) {
+        console.error("Failed to unregister service-worker: ", e);
+    }
 }
