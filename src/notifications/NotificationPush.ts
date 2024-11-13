@@ -1,6 +1,6 @@
 const SERVICE_WORKER_FILE_PATH = "./notification-sw.js";
 
-export function notificationUnsupported(): boolean {
+export function isNotificationSupported(): boolean {
     let unsupported = false;
     if (
         !("serviceWorker" in navigator) ||
@@ -9,23 +9,19 @@ export function notificationUnsupported(): boolean {
     ) {
         unsupported = true;
     }
-    return unsupported;
+    return !unsupported;
 }
 
-export function checkPermissionStateAndAct(onSubscribe: (subs: PushSubscription | null) => void): void {
-    const state: NotificationPermission = Notification.permission;
-    switch (state) {
-        case "denied":
-            break;
-        case "granted":
-            registerAndSubscribe(onSubscribe);
-            break;
-        case "default":
-            break;
-    }
+export function isPermissionGranted(): boolean {
+    return Notification.permission === "granted";
 }
 
-export async function registerAndSubscribe(onSubscribe: (subs: PushSubscription | null) => void): Promise<void> {
+export function isPermissionDenied(): boolean {
+    return Notification.permission === "denied";
+}
+
+export async function registerAndSubscribe(onSubscribe: (subs: PushSubscription | null) => void,
+                                           onError: (e: Error) => void): Promise<void> {
     try {
         await navigator.serviceWorker.register(SERVICE_WORKER_FILE_PATH);
         //subscribe to notification
@@ -41,9 +37,9 @@ export async function registerAndSubscribe(onSubscribe: (subs: PushSubscription 
                 onSubscribe(subscription);
             })
             .catch((e) => {
-                console.error("Failed to subscribe cause of: ", e);
+                onError(e);
             });
-    } catch (e) {
-        console.error("Failed to register service-worker: ", e);
+    } catch (e: any) {
+        onError(e);
     }
 }
