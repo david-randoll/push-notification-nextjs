@@ -21,6 +21,10 @@ insert the keys.
 ```bash
 web-push generate-vapid-keys --json
 ```
+or
+```bash
+npx web-push generate-vapid-keys --json
+```
 
 Start the development server:
 
