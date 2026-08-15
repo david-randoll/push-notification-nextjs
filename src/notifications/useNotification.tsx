@@ -1,14 +1,17 @@
 "use client";
 import {
+    getUnsupportedReason,
     isNotificationSupported,
     isPermissionDenied,
     isPermissionGranted,
-    registerAndSubscribe
+    registerAndSubscribe,
+    UnsupportedReason
 } from "./NotificationPush";
 import React, {createContext, ReactNode, useContext, useEffect, useMemo, useState} from "react";
 
 interface NotificationContextType {
     isSupported: boolean;
+    unsupportedReason: UnsupportedReason | null;
     isSubscribed: boolean;
     isGranted: boolean;
     isDenied: boolean;
@@ -21,25 +24,17 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({children}) => {
     const [isSupported, setIsSupported] = useState<boolean>(false);
+    const [unsupportedReason, setUnsupportedReason] = useState<UnsupportedReason | null>(null);
     const [isGranted, setIsGranted] = useState<boolean>(false);
     const [isDenied, setIsDenied] = useState<boolean>(false);
     const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
     const [subscription, setSubscription] = useState<PushSubscription | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (isNotificationSupported()) {
-            setIsSupported(true);
-            const granted = isPermissionGranted();
-            setIsGranted(granted);
-            setIsDenied(isPermissionDenied());
-            if (granted) {
-                handleSubscribe();
-            }
-        }
-    }, []);
-
     const handleSubscribe = () => {
+        // Clear any error from a previous attempt, otherwise a retry that succeeds still
+        // renders the stale "Error: ..." line next to "You are subscribed!".
+        setErrorMessage(null);
         const onSubscribe = (subscription: PushSubscription | null) => {
             if (subscription) {
                 // for a production app, you would probably have a user account and save the subscription to the user
@@ -60,9 +55,27 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({childre
         registerAndSubscribe(onSubscribe, onError);
     };
 
+    // The notification/service-worker APIs only exist in the browser, so capability
+    // detection has to happen after mount rather than during render.
+    useEffect(() => {
+        /* eslint-disable react-hooks/set-state-in-effect */
+        setUnsupportedReason(getUnsupportedReason());
+        if (isNotificationSupported()) {
+            setIsSupported(true);
+            const granted = isPermissionGranted();
+            setIsGranted(granted);
+            setIsDenied(isPermissionDenied());
+            if (granted) {
+                handleSubscribe();
+            }
+        }
+        /* eslint-enable react-hooks/set-state-in-effect */
+    }, []);
+
     const contextValue = useMemo(
         () => ({
             isSupported,
+            unsupportedReason,
             isSubscribed,
             isGranted,
             isDenied,
@@ -70,7 +83,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({childre
             errorMessage,
             handleSubscribe,
         }),
-        [isSupported, isSubscribed, isGranted, isDenied, subscription, errorMessage]
+        [isSupported, unsupportedReason, isSubscribed, isGranted, isDenied, subscription, errorMessage]
     );
 
     return <NotificationContext.Provider value={contextValue}>{children}</NotificationContext.Provider>;

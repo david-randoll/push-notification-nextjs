@@ -6,15 +6,26 @@ export const NotificationSubscriptionForm = () => {
 
     const [message, setMessage] = useState("");
     const [title, setTitle] = useState("");
+    const [sendError, setSendError] = useState<string | null>(null);
 
     const sendNotification = async () => {
-        await fetch("/api/web-push/send", {
+        setSendError(null);
+        const response = await fetch("/api/web-push/send", {
             method: "POST",
             body: JSON.stringify({title, message, subscription}),
             headers: {
                 "Content-Type": "application/json",
             },
         });
+
+        // The route now reports real failures, so keep the user's text on error instead of
+        // clearing the form as though the notification had gone out.
+        if (!response.ok) {
+            const body = await response.json().catch(() => null);
+            setSendError(body?.message ?? "Failed to send push notification.");
+            return;
+        }
+
         setMessage("");
         setTitle("");
     };
@@ -22,6 +33,10 @@ export const NotificationSubscriptionForm = () => {
     return (
         <div className="bg-white shadow-md rounded-lg p-6 mt-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">Send a Notification</h2>
+
+            {sendError && (
+                <p className="text-red-600 mb-4">{sendError}</p>
+            )}
 
             {/* Title Input */}
             <input

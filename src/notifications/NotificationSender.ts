@@ -6,8 +6,17 @@ webpush.setVapidDetails(
     process.env.VAPID_PRIVATE_KEY ?? ""
 );
 
+interface PushPayload {
+    title: string;
+    body: string;
+    image?: string;
+    icon: string;
+    url: string;
+    badge: string;
+}
+
 export const sendNotification = async (subscription: PushSubscription, title: string, message: string) => {
-    const pushPayload: any = {
+    const pushPayload: PushPayload = {
         title: title,
         body: message,
         //image: "/logo.png", if you want to add an image
@@ -16,12 +25,9 @@ export const sendNotification = async (subscription: PushSubscription, title: st
         badge: "/logo.svg",
     };
 
-    webpush
-        .sendNotification(subscription, JSON.stringify(pushPayload))
-        .then(() => {
-            console.log("Notification sent");
-        })
-        .catch((error) => {
-            console.error("Error sending notification", error);
-        });
+    // Must be awaited: without it the route responds (and, on a serverless host, the
+    // invocation can be torn down) before the push has actually been delivered.
+    // Errors deliberately propagate so the route can report the real outcome rather than
+    // reporting success for a push the push service rejected.
+    await webpush.sendNotification(subscription, JSON.stringify(pushPayload));
 };

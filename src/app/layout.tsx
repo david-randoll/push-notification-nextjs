@@ -14,21 +14,15 @@ export const metadata: Metadata = {
     title: "Push Notification Sample",
     description:
         "A sample project for push notifications with Next.js. The app used web push notifications to send messages to users.",
+    manifest: "/manifest.json",
     icons: {
         icon: "/logo.svg",
     },
 };
 
-export default function RootLayout({
-    children,
-}: Readonly<{
-    children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: LayoutProps<"/">) {
     return (
         <html lang="en">
-            <head>
-                <link rel="manifest" href="/manifest.json" />
-            </head>
             <body className={`${inter.variable} ${ibmPlexSerif.variable}`}>
                 <NotificationProvider>{children}</NotificationProvider>
             </body>
