@@ -32,6 +32,9 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({childre
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const handleSubscribe = () => {
+        // Clear any error from a previous attempt, otherwise a retry that succeeds still
+        // renders the stale "Error: ..." line next to "You are subscribed!".
+        setErrorMessage(null);
         const onSubscribe = (subscription: PushSubscription | null) => {
             if (subscription) {
                 // for a production app, you would probably have a user account and save the subscription to the user

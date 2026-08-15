@@ -53,6 +53,25 @@ However, on Apple devices, there are a few extra things we have to do.
 
 You can read more about it [here](https://developer.apple.com/documentation/usernotifications/sending-web-push-notifications-in-web-apps-and-browsers).
 
+## Security note — read before deploying this
+
+This is a **sample project**, and `POST /api/web-push/send` is deliberately kept as simple as possible:
+it takes the whole `subscription` object from the request body and passes it to `web-push`. That is
+fine for a demo, but it means the endpoint is **unauthenticated and unthrottled**, and the caller
+controls `subscription.endpoint` — the URL the server sends the push to. Consequences you inherit if
+you copy this as-is:
+
+-   **Server-side request forgery.** The server will open an HTTPS connection to whatever host the
+    caller names, which can be used to probe services reachable from your deployment. (Limited: the
+    library is HTTPS-only with TLS verification on, and the response is never returned to the caller.)
+-   **Open relay.** Anyone holding a subscription can send it notifications with any title and body.
+-   **No timeout or rate limit.** A slow or stalling endpoint holds the request handler open.
+
+Before putting anything like this in production: require authentication, look the subscription up
+server-side by user id instead of trusting the body, allowlist the endpoint host against the real push
+services (`*.googleapis.com`, `*.mozilla.com`, `*.notify.windows.com`, `*.push.apple.com`), and set a
+timeout plus a rate limit.
+
 ## Configuration
 
 Install the below packages.
@@ -81,8 +100,15 @@ With this should be able to send notifications now. For Apple devices, you will 
 
 ### Configuring as a PWA
 
-A PWA needs two things: a web app manifest, and a service worker. The service worker is already covered by
-`public/notification-sw.js` from the previous step, so all that is left is the manifest and the icons.
+On iOS, "PWA" means a web app manifest plus Add to Home Screen — that is all the push flow above needs,
+so the remaining work is the manifest and the icons.
+
+> **Note on installability elsewhere.** Chrome and Edge only offer an install prompt
+> (`beforeinstallprompt`) for a service worker that handles `fetch`. `public/notification-sw.js`
+> deliberately handles only `push` and `notificationclick`, and it is registered on subscribe rather
+> than on page load — so this sample is installable on iOS, but not promptable on Android/desktop. If
+> you want that, register a service worker on load and give it a `fetch` handler (or add a maintained
+> PWA plugin such as [`@serwist/next`](https://serwist.pages.dev)).
 
 I am going to use [pwabuilder](https://www.pwabuilder.com/imageGenerator) to generate the icons for the app. This will generate the different sizes of the icon that are needed for different devices. After going to the site, download the zip file and place the contents into the public folder. You should get 3 folders: android, ios, and windows. Also, an `icons.json` file which we will use for our manifest file.
 
