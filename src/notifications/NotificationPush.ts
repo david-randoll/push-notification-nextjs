@@ -12,6 +12,19 @@ export function isNotificationSupported(): boolean {
     return !unsupported;
 }
 
+export type UnsupportedReason = "insecure-context" | "unsupported-browser";
+
+/**
+ * Service workers and the Push API are only exposed in a secure context: HTTPS, or the
+ * localhost exemption. Over plain HTTP (e.g. hitting a LAN IP like http://192.168.x.x)
+ * the APIs are absent entirely, which is indistinguishable from an old browser unless we
+ * check the context first. Returns null when push is supported.
+ */
+export function getUnsupportedReason(): UnsupportedReason | null {
+    if (isNotificationSupported()) return null;
+    return window.isSecureContext ? "unsupported-browser" : "insecure-context";
+}
+
 export function isPermissionGranted(): boolean {
     return Notification.permission === "granted";
 }
@@ -39,7 +52,7 @@ export async function registerAndSubscribe(onSubscribe: (subs: PushSubscription 
             .catch((e) => {
                 onError(e);
             });
-    } catch (e: any) {
-        onError(e);
+    } catch (e) {
+        onError(e instanceof Error ? e : new Error(String(e)));
     }
 }

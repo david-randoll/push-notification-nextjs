@@ -2,7 +2,7 @@ import React from "react";
 import {useNotification} from "@/notifications/useNotification";
 
 const NotificationSubscriptionStatus = () => {
-    const {isSubscribed, handleSubscribe, isGranted, isDenied, errorMessage} = useNotification();
+    const {isSubscribed, handleSubscribe, isDenied, errorMessage} = useNotification();
 
     return (
         <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-md">
@@ -31,7 +31,9 @@ const NotificationSubscriptionStatus = () => {
                     </button>
                 )}
 
-                {isGranted && (
+                {/* Keyed off isSubscribed, not isGranted: permission can be granted while the
+                    subscription itself fails, and claiming success then is actively misleading. */}
+                {isSubscribed && (
                     <div className="text-center">
                         <p className="text-green-600 font-semibold">You are subscribed!</p>
                     </div>

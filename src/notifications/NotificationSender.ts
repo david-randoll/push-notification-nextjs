@@ -6,8 +6,17 @@ webpush.setVapidDetails(
     process.env.VAPID_PRIVATE_KEY ?? ""
 );
 
+interface PushPayload {
+    title: string;
+    body: string;
+    image?: string;
+    icon: string;
+    url: string;
+    badge: string;
+}
+
 export const sendNotification = async (subscription: PushSubscription, title: string, message: string) => {
-    const pushPayload: any = {
+    const pushPayload: PushPayload = {
         title: title,
         body: message,
         //image: "/logo.png", if you want to add an image

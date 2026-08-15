@@ -3,6 +3,11 @@ notification should work on all devices and browsers.
 
 **Require IOS 16+ for Apple devices.**
 
+`main` targets **Next.js 16** (App Router, Turbopack, React 19, Tailwind CSS v4). If you are still on an older
+Next.js, the **Next.js 14** version of this sample is kept as a reference on the
+[`nextjs-14`](https://github.com/david-randoll/push-notification-nextjs/tree/nextjs-14) branch — it uses webpack,
+React 18, Tailwind CSS v3 and `next-pwa`.
+
 ## Demo
 
 A live demo of the project can be found [here](https://push-notification.davidrandoll.com/)
@@ -53,7 +58,7 @@ You can read more about it [here](https://developer.apple.com/documentation/user
 Install the below packages.
 
 ```bash
-npm install web-push next-pwa
+npm install web-push
 ```
 
 Skip this step if you are using typescript.
@@ -76,8 +81,8 @@ With this should be able to send notifications now. For Apple devices, you will 
 
 ### Configuring as a PWA
 
-The [next-pwa](https://www.npmjs.com/package/next-pwa) package will generate a `sw-pwa.js` and a `workbox-*.js` file in
-the public folder.
+A PWA needs two things: a web app manifest, and a service worker. The service worker is already covered by
+`public/notification-sw.js` from the previous step, so all that is left is the manifest and the icons.
 
 I am going to use [pwabuilder](https://www.pwabuilder.com/imageGenerator) to generate the icons for the app. This will generate the different sizes of the icon that are needed for different devices. After going to the site, download the zip file and place the contents into the public folder. You should get 3 folders: android, ios, and windows. Also, an `icons.json` file which we will use for our manifest file.
 
@@ -97,19 +102,22 @@ Move the `icons.json` file to the `public` folder and rename it to `manifest.jso
 }
 ```
 
-add the `manifest.json` file to the `layout.tsx` file.
+Reference the `manifest.json` file from the `metadata` export in `layout.tsx`. Next.js renders the
+`<link rel="manifest">` tag for you.
 
 ```tsx
-export default function RootLayout({
-    children,
-}: Readonly<{
-    children: React.ReactNode;
-}>) {
+export const metadata: Metadata = {
+    title: "Push Notification Sample",
+    description: "...",
+    manifest: "/manifest.json",
+    icons: {
+        icon: "/logo.svg",
+    },
+};
+
+export default function RootLayout({ children }: LayoutProps<"/">) {
     return (
         <html lang="en">
-            <head>
-                <link rel="manifest" href="/manifest.json" />
-            </head>
             <body className={`${inter.variable} ${ibmPlexSerif.variable}`}>
                 <NotificationProvider>{children}</NotificationProvider>
             </body>
@@ -118,17 +126,14 @@ export default function RootLayout({
 }
 ```
 
-modify the `next.config.js` file to include the `next-pwa` configuration.
+That is all that is required. `next.config.ts` only needs the standalone output used by the Dockerfile.
 
-```javascript
-/** @type {import('next').NextConfig} */
+```typescript
+import type { NextConfig } from "next";
 
-const withPWA = require("next-pwa")({
-    dest: "public",
-    sw: "sw-pwa.js",
-});
-
-module.exports = withPWA({
+const nextConfig: NextConfig = {
     output: "standalone",
-});
+};
+
+export default nextConfig;
 ```
