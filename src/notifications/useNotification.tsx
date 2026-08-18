@@ -7,10 +7,12 @@ import {
     registerAndSubscribe,
     UnsupportedReason
 } from "./NotificationPush";
+import {isBraveBrowser} from "./BrowserDetection";
 import React, {createContext, ReactNode, useContext, useEffect, useMemo, useState} from "react";
 
 interface NotificationContextType {
     isSupported: boolean;
+    isBrave: boolean;
     unsupportedReason: UnsupportedReason | null;
     isSubscribed: boolean;
     isGranted: boolean;
@@ -24,6 +26,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({children}) => {
     const [isSupported, setIsSupported] = useState<boolean>(false);
+    const [isBrave, setIsBrave] = useState<boolean>(false);
     const [unsupportedReason, setUnsupportedReason] = useState<UnsupportedReason | null>(null);
     const [isGranted, setIsGranted] = useState<boolean>(false);
     const [isDenied, setIsDenied] = useState<boolean>(false);
@@ -60,6 +63,9 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({childre
     useEffect(() => {
         /* eslint-disable react-hooks/set-state-in-effect */
         setUnsupportedReason(getUnsupportedReason());
+        // Brave keeps the push transport disabled by default, so knowing we're on Brave
+        // lets a failed subscribe point at the setting instead of a bare error.
+        isBraveBrowser().then(setIsBrave);
         if (isNotificationSupported()) {
             setIsSupported(true);
             const granted = isPermissionGranted();
@@ -75,6 +81,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({childre
     const contextValue = useMemo(
         () => ({
             isSupported,
+            isBrave,
             unsupportedReason,
             isSubscribed,
             isGranted,
@@ -83,7 +90,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({childre
             errorMessage,
             handleSubscribe,
         }),
-        [isSupported, unsupportedReason, isSubscribed, isGranted, isDenied, subscription, errorMessage]
+        [isSupported, isBrave, unsupportedReason, isSubscribed, isGranted, isDenied, subscription, errorMessage]
     );
 
     return <NotificationContext.Provider value={contextValue}>{children}</NotificationContext.Provider>;

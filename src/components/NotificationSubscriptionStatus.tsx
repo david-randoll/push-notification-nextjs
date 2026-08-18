@@ -1,8 +1,14 @@
 import React from "react";
 import {useNotification} from "@/notifications/useNotification";
+import {isPushServiceError} from "@/notifications/BrowserDetection";
+import {BraveGoogleServicesGuide} from "@/components/BraveGoogleServicesGuide";
 
 const NotificationSubscriptionStatus = () => {
-    const {isSubscribed, handleSubscribe, isDenied, errorMessage} = useNotification();
+    const {isSubscribed, handleSubscribe, isDenied, errorMessage, isBrave} = useNotification();
+
+    // Brave reports its disabled push transport as a generic subscribe failure, so treat
+    // that combination as the settings problem it actually is rather than a dead end.
+    const needsBraveGoogleServices = isBrave && !isSubscribed && isPushServiceError(errorMessage);
 
     return (
         <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-md">
@@ -14,14 +20,18 @@ const NotificationSubscriptionStatus = () => {
                 </p>
             )}
 
-            {errorMessage && (
+            {needsBraveGoogleServices && (
+                <BraveGoogleServicesGuide onRetry={handleSubscribe}/>
+            )}
+
+            {errorMessage && !needsBraveGoogleServices && (
                 <p className="text-red-600 text-center mb-4">
                     Error: {errorMessage}
                 </p>
             )}
 
             <div>
-                {!isSubscribed && (
+                {!isSubscribed && !needsBraveGoogleServices && (
                     <button
                         onClick={handleSubscribe}
                         className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition"
