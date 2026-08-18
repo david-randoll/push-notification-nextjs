@@ -1,7 +1,8 @@
 A sample project for push notifications with Next.js. The app used web push notifications to send messages to users. The
 notification should work on all devices and browsers.
 
-**Require IOS 16+ for Apple devices.**
+**Apple devices need iOS 16.4+ and the site added to the Home Screen.** See
+[Platform requirements](#platform-requirements) for the per-browser conditions.
 
 `main` targets **Next.js 16** (App Router, Turbopack, React 19, Tailwind CSS v4). If you are still on an older
 Next.js, the **Next.js 14** version of this sample is kept as a reference on the
@@ -46,12 +47,72 @@ service worker that listens for push events and displays the notification.
 
 Using just this package is enough to send push notifications from most devices and browsers.
 
-However, on Apple devices, there are a few extra things we have to do.
+However, a few platforms have their own conditions, and none of them report a useful error when
+they are not met. The app checks for them up front and shows the user what to do instead of a raw
+failure.
 
--   The app must be served over HTTPS with a valid SSL certificate.
--   The app must be a PWA (Progressive Web App).
+## Platform requirements
 
-You can read more about it [here](https://developer.apple.com/documentation/usernotifications/sending-web-push-notifications-in-web-apps-and-browsers).
+Everywhere, the page has to be served over HTTPS with a valid certificate (`localhost` is exempt).
+Without a secure context the browser does not expose service workers or the Push API at all, so
+`http://192.168.x.x` style testing on a phone will look like an unsupported browser. Permission also
+has to be requested from inside a real user gesture, which is why `registerAndSubscribe` calls
+`Notification.requestPermission()` first, before awaiting the service worker registration — awaiting
+anything beforehand ends the gesture and Safari silently suppresses the prompt.
+
+### iPhone and iPad
+
+Apple only exposes the Push API to web apps that have been added to the Home Screen. In an ordinary
+Safari tab `window.PushManager` does not exist, so there is nothing to subscribe to and no way to
+recover in the tab. Requirements:
+
+-   iOS or iPadOS **16.4 or later**.
+-   Added to the Home Screen through Safari's Share menu, and opened from that icon.
+-   A `manifest.json` with `"display": "standalone"` and icons (see the PWA section below).
+
+`PlatformDetection.ts` identifies the device and whether the page is running standalone
+(`navigator.standalone`, plus the `display-mode` media queries), and the app replaces the subscribe
+button with install instructions until that is done. iPadOS 13+ reports a desktop Safari user agent,
+so the iPad is identified by `navigator.maxTouchPoints` on a `MacIntel` platform rather than by name.
+
+Two things that surprise people afterwards: deleting the Home Screen icon discards the subscription,
+and Focus or Do Not Disturb silences delivery without any signal to the sender.
+
+### Brave
+
+Brave ships the Push API but leaves the transport behind it turned off. Web push on Chromium is
+delivered through Google's FCM service, and Brave keeps that opt-in, so `pushManager.subscribe()`
+rejects with `Registration failed - push service error` on a site that is otherwise perfectly set up.
+The fix is on the user's side:
+
+1. Open `brave://settings/privacy`.
+2. Under **Security**, turn on **Use Google services for push messaging**.
+3. Relaunch the browser — the setting does not apply until then.
+
+Brave is detected with `navigator.brave.isBrave()`, since its user agent is identical to Chrome's,
+and the walkthrough is shown in place of the error when a subscribe attempt fails this way. Other
+de-Googled Chromium builds fail identically and usually have an equivalent toggle.
+
+### Safari on macOS
+
+Works in a normal tab from Safari 16.1, no install required. The permission prompt only appears in
+response to a click, and macOS notification settings or a Focus mode can suppress the banner after
+the browser has accepted the push.
+
+### Chrome, Edge and Firefox
+
+These work out of the box on desktop and Android with nothing beyond HTTPS and VAPID keys. Points
+worth knowing:
+
+-   Firefox private windows do not run service workers, so subscribing fails there by design.
+-   Android may delay delivery for an app under battery optimisation or Data Saver.
+-   On Windows, notifications go through the system notification centre, so Focus Assist and the
+    per-app settings under Settings → System → Notifications apply.
+-   Permission is stored per origin, so a subscription taken on `localhost` says nothing about the
+    deployed domain.
+
+You can read more about the Apple side
+[here](https://developer.apple.com/documentation/usernotifications/sending-web-push-notifications-in-web-apps-and-browsers).
 
 ## Security note — read before deploying this
 

@@ -36,22 +36,29 @@ export function isPermissionDenied(): boolean {
 export async function registerAndSubscribe(onSubscribe: (subs: PushSubscription | null) => void,
                                            onError: (e: Error) => void): Promise<void> {
     try {
+        // Safari (macOS, and iOS Home Screen apps) only shows the prompt for an explicit
+        // requestPermission() call made inside the click that triggered it, so ask before
+        // awaiting anything else — registering the service worker first would end the
+        // gesture and leave the prompt suppressed.
+        if (Notification.permission === "default") {
+            const permission = await Notification.requestPermission();
+            if (permission !== "granted") {
+                onError(new Error("Notification permission was not granted."));
+                return;
+            }
+        } else if (isPermissionDenied()) {
+            onError(new Error("Notifications are blocked for this site in your browser settings."));
+            return;
+        }
+
         await navigator.serviceWorker.register(SERVICE_WORKER_FILE_PATH);
-        //subscribe to notification
-        navigator.serviceWorker.ready
-            .then((registration: ServiceWorkerRegistration) => {
-                return registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-                });
-            })
-            .then((subscription: PushSubscription) => {
-                console.info("Created subscription Object: ", subscription.toJSON());
-                onSubscribe(subscription);
-            })
-            .catch((e) => {
-                onError(e);
-            });
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+        });
+        console.info("Created subscription Object: ", subscription.toJSON());
+        onSubscribe(subscription);
     } catch (e) {
         onError(e instanceof Error ? e : new Error(String(e)));
     }
