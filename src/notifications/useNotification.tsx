@@ -8,11 +8,13 @@ import {
     UnsupportedReason
 } from "./NotificationPush";
 import {isBraveBrowser} from "./BrowserDetection";
+import {requiresHomeScreenInstall} from "./PlatformDetection";
 import React, {createContext, ReactNode, useContext, useEffect, useMemo, useState} from "react";
 
 interface NotificationContextType {
     isSupported: boolean;
     isBrave: boolean;
+    requiresInstall: boolean;
     unsupportedReason: UnsupportedReason | null;
     isSubscribed: boolean;
     isGranted: boolean;
@@ -27,6 +29,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({children}) => {
     const [isSupported, setIsSupported] = useState<boolean>(false);
     const [isBrave, setIsBrave] = useState<boolean>(false);
+    const [requiresInstall, setRequiresInstall] = useState<boolean>(false);
     const [unsupportedReason, setUnsupportedReason] = useState<UnsupportedReason | null>(null);
     const [isGranted, setIsGranted] = useState<boolean>(false);
     const [isDenied, setIsDenied] = useState<boolean>(false);
@@ -63,6 +66,9 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({childre
     useEffect(() => {
         /* eslint-disable react-hooks/set-state-in-effect */
         setUnsupportedReason(getUnsupportedReason());
+        // Apple exposes push only to installed Home Screen apps, so a Safari tab on iOS
+        // needs the install instructions rather than a subscribe button that cannot work.
+        setRequiresInstall(requiresHomeScreenInstall());
         // Brave keeps the push transport disabled by default, so knowing we're on Brave
         // lets a failed subscribe point at the setting instead of a bare error.
         isBraveBrowser().then(setIsBrave);
@@ -82,6 +88,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({childre
         () => ({
             isSupported,
             isBrave,
+            requiresInstall,
             unsupportedReason,
             isSubscribed,
             isGranted,
@@ -90,7 +97,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({childre
             errorMessage,
             handleSubscribe,
         }),
-        [isSupported, isBrave, unsupportedReason, isSubscribed, isGranted, isDenied, subscription, errorMessage]
+        [isSupported, isBrave, requiresInstall, unsupportedReason, isSubscribed, isGranted, isDenied, subscription, errorMessage]
     );
 
     return <NotificationContext.Provider value={contextValue}>{children}</NotificationContext.Provider>;

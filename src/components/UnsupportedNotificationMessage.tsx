@@ -1,4 +1,3 @@
-import Image from "next/image";
 import React from "react";
 import {useNotification} from "@/notifications/useNotification";
 
@@ -24,12 +23,19 @@ export const UnsupportedNotificationMessage = () => {
         );
     }
 
+    // iOS reaches the install guide before this point, so anything left here is a browser
+    // that genuinely lacks the Push API and has no in-page remedy to offer.
     return (
-        <div className="p-6 w-full max-w-md">
-            <p className="text-red-500 text-center mb-6">Push notifications are not supported in this browser.
-                Consider adding to the home screen (PWA) if on iOS.</p>
-            <Image src="/ios-pwa/pwa_ios.jpg" width={10000} height={10000} alt="Push Notification"
-                   className="h-auto w-auto"/>
+        <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-md">
+            <h1 className="text-2xl font-bold mb-4 text-center">Push Notification Subscription</h1>
+            <p className="text-red-500 text-center mb-3">
+                Push notifications are not supported in this browser.
+            </p>
+            <p className="text-gray-600 text-center text-sm">
+                Recent versions of Chrome, Edge, Firefox and Safari all support them. Private and
+                incognito windows are a common cause, since Firefox in particular does not run
+                service workers there.
+            </p>
         </div>
     );
 };
